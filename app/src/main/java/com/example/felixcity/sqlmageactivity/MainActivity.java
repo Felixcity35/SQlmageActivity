@@ -3,8 +3,11 @@ package com.example.felixcity.sqlmageactivity;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -42,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String IMAGE_DIRECTORY = "/SQimages";
     private int GALLERY = 1, CAMERA = 2;
 
+
+    SQLiteOpenHelper openHelper;
+    SQLiteDatabase db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
         requestMultiplePermissions();
 
+        openHelper = new DBHelper(this);
         btn = findViewById(R.id.btn);
         imageview = findViewById(R.id.iv);
 
@@ -107,8 +115,13 @@ public class MainActivity extends AppCompatActivity {
             if (data != null) {
                 Uri contentURI = data.getData();
                 try {
+                    db = openHelper.getWritableDatabase();
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
                     String path = saveImage(bitmap);    // saveImage is a function
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(DBHelper.column_2,path);
+                    long id = db.insert(DBHelper.Table_name,null,contentValues);
+                    db.close();
                     Toast.makeText(MainActivity.this, "Image Saved! in  " + path, Toast.LENGTH_LONG).show();
                     imageview.setImageBitmap(bitmap);
 
@@ -122,6 +135,10 @@ public class MainActivity extends AppCompatActivity {
             Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
             imageview.setImageBitmap(thumbnail);
            String path = saveImage(thumbnail);  // saveImage is a function
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(DBHelper.column_2,path);
+            long id = db.insert(DBHelper.Table_name,null,contentValues);
+            db.close();
             Toast.makeText(MainActivity.this, "Image Saved! in "+ path, Toast.LENGTH_LONG).show();
         }
     }
